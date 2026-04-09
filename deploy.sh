@@ -41,12 +41,20 @@ case $CHANGED in
     ssh "$SERVER" "cd ~/eventcraft && docker compose up -d live"
     ;;
   all)
-    build_and_send api   apps/api/Dockerfile.api    apps/api/
-    build_and_send proxy apps/proxy/Dockerfile.ce   apps/proxy/
-    build_and_send web   apps/web/Dockerfile.web    .
-    build_and_send admin apps/admin/Dockerfile.admin .
-    build_and_send space apps/space/Dockerfile.space .
-    build_and_send live  apps/live/Dockerfile.live   .
+    echo "▶ Building all images in parallel..."
+    docker build -f apps/api/Dockerfile.api     -t "eventcraft-api:$VERSION"   -t "eventcraft-api:latest"   apps/api/   &
+    docker build -f apps/proxy/Dockerfile.ce    -t "eventcraft-proxy:$VERSION" -t "eventcraft-proxy:latest" apps/proxy/ &
+    docker build -f apps/web/Dockerfile.web     -t "eventcraft-web:$VERSION"   -t "eventcraft-web:latest"   .           &
+    docker build -f apps/admin/Dockerfile.admin -t "eventcraft-admin:$VERSION" -t "eventcraft-admin:latest" .           &
+    docker build -f apps/space/Dockerfile.space -t "eventcraft-space:$VERSION" -t "eventcraft-space:latest" .           &
+    docker build -f apps/live/Dockerfile.live   -t "eventcraft-live:$VERSION"  -t "eventcraft-live:latest"  .           &
+    wait
+
+    echo "▶ Sending images to server..."
+    for svc in api proxy web admin space live; do
+      docker save "eventcraft-$svc:latest" | gzip | ssh "$SERVER" "docker load"
+    done
+
     scp docker-compose.server.yml "$SERVER:~/eventcraft/docker-compose.yml"
     ssh "$SERVER" "cd ~/eventcraft && docker compose up -d"
     ;;
