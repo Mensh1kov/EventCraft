@@ -3,28 +3,36 @@ name: eventcraft-team
 services:
   web:
     image: eventcraft-web:latest
-    pull_policy: never
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.web
     container_name: eventcraft-team-web
     restart: unless-stopped
     depends_on: [api]
 
   admin:
     image: eventcraft-admin:latest
-    pull_policy: never
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile.admin
     container_name: eventcraft-team-admin
     restart: unless-stopped
     depends_on: [api]
 
   space:
     image: eventcraft-space:latest
-    pull_policy: never
+    build:
+      context: .
+      dockerfile: apps/space/Dockerfile.space
     container_name: eventcraft-team-space
     restart: unless-stopped
     depends_on: [api]
 
   live:
     image: eventcraft-live:latest
-    pull_policy: never
+    build:
+      context: .
+      dockerfile: apps/live/Dockerfile.live
     container_name: eventcraft-team-live
     restart: unless-stopped
     environment:
@@ -35,7 +43,9 @@ services:
 
   api:
     image: eventcraft-api:latest
-    pull_policy: never
+    build:
+      context: apps/api
+      dockerfile: Dockerfile.api
     container_name: eventcraft-team-api
     command: ./bin/docker-entrypoint-api.sh
     restart: unless-stopped
@@ -44,7 +54,6 @@ services:
 
   worker:
     image: eventcraft-api:latest
-    pull_policy: never
     container_name: eventcraft-team-worker
     command: ./bin/docker-entrypoint-worker.sh
     restart: unless-stopped
@@ -53,7 +62,6 @@ services:
 
   beat-worker:
     image: eventcraft-api:latest
-    pull_policy: never
     container_name: eventcraft-team-beat
     command: ./bin/docker-entrypoint-beat.sh
     restart: unless-stopped
@@ -62,12 +70,33 @@ services:
 
   migrator:
     image: eventcraft-api:latest
-    pull_policy: never
     container_name: eventcraft-team-migrator
     command: ./bin/docker-entrypoint-migrator.sh
     restart: no
     env_file: .env
     depends_on: [plane-db, plane-redis]
+
+  proxy:
+    image: eventcraft-proxy:latest
+    build:
+      context: apps/proxy
+      dockerfile: Dockerfile.ce
+    container_name: eventcraft-team-proxy
+    restart: unless-stopped
+    ports:
+      - "8074:80"
+    environment:
+      FILE_SIZE_LIMIT: ${FILE_SIZE_LIMIT:-5242880}
+      BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-uploads}
+      SITE_ADDRESS: ":80"
+      CERT_EMAIL: ""
+      CERT_ACME_CA: ""
+      CERT_ACME_DNS: ""
+      TRUSTED_PROXIES: "0.0.0.0/0"
+    depends_on: [web, api, space, admin, live]
+    volumes:
+      - proxy_config:/config
+      - proxy_data:/data
 
   plane-db:
     image: postgres:15.7-alpine
@@ -82,7 +111,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
 
   plane-redis:
-    image: valkey/valkey:7.2.11-alpine
+    image: valkey/valkey:[Secrets19]
     container_name: eventcraft-team-redis
     restart: unless-stopped
     volumes:
@@ -109,26 +138,6 @@ services:
       MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
     volumes:
       - uploads:/export
-
-  proxy:
-    image: eventcraft-proxy:latest
-    pull_policy: never
-    container_name: eventcraft-team-proxy
-    restart: unless-stopped
-    ports:
-      - "8074:80"
-    environment:
-      FILE_SIZE_LIMIT: ${FILE_SIZE_LIMIT:-5242880}
-      BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-uploads}
-      SITE_ADDRESS: ":80"
-      CERT_EMAIL: ""
-      CERT_ACME_CA: ""
-      CERT_ACME_DNS: ""
-      TRUSTED_PROXIES: "0.0.0.0/0"
-    depends_on: [web, api, space, admin, live]
-    volumes:
-      - proxy_config:/config
-      - proxy_data:/data
 
 volumes:
   pgdata:
