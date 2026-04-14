@@ -121,9 +121,6 @@ services:
       FILE_SIZE_LIMIT: ${FILE_SIZE_LIMIT:-5242880}
       BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-uploads}
       SITE_ADDRESS: ":80"
-      CERT_EMAIL: ""
-      CERT_ACME_CA: ""
-      CERT_ACME_DNS: ""
       TRUSTED_PROXIES: "0.0.0.0/0"
     depends_on: [web, api, space, admin, live]
     volumes:
