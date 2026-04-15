@@ -108,7 +108,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
 
   plane-redis:
-    image: valkey/valkey:[Secrets19]
+    image: valkey/valkey:7.2.11-alpine
     container_name: eventcraft-team-redis
     restart: unless-stopped
     volumes:
