@@ -62,6 +62,8 @@ class IssueFlatSerializer(BaseSerializer):
             "priority",
             "start_date",
             "target_date",
+            "budget_estimated",
+            "budget_actual",
             "sequence_id",
             "sort_order",
             "is_draft",
@@ -799,6 +801,8 @@ class IssueSerializer(DynamicBaseSerializer):
             "link_count",
             "is_draft",
             "archived_at",
+            "budget_estimated",
+            "budget_actual",
         ]
         read_only_fields = fields
 
@@ -840,6 +844,8 @@ class IssueListDetailSerializer(serializers.Serializer):
             "priority": instance.priority,
             "start_date": instance.start_date,
             "target_date": instance.target_date,
+            "budget_estimated": instance.budget_estimated,
+            "budget_actual": instance.budget_actual,
             "sequence_id": instance.sequence_id,
             "project_id": instance.project_id,
             "parent_id": instance.parent_id,
@@ -955,6 +961,8 @@ class IssuePublicSerializer(BaseSerializer):
             "workspace",
             "priority",
             "target_date",
+            "budget_estimated",
+            "budget_actual",
             "reactions",
             "votes",
         ]
@@ -983,6 +991,8 @@ class IssueVersionDetailSerializer(BaseSerializer):
             "priority",
             "start_date",
             "target_date",
+            "budget_estimated",
+            "budget_actual",
             "assignees",
             "sequence_id",
             "labels",

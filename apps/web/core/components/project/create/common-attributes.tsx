@@ -151,13 +151,13 @@ function ProjectCommonAttributes(props: Props) {
           )}
         />
       </div>
-      <div className="md:col-span-4">
-        <label>Дата мероприятия</label>
+      <div className="md:col-span-3">
+        <label className="text-sm font-medium text-custom-text-200">Дата мероприятия</label>
         <Controller
           name="event_date"
           control={control}
           render={({ field: { value, onChange } }) => (
-            <input
+            <Input
               id="event_date"
               name="event_date"
               type="date"
@@ -166,20 +166,20 @@ function ProjectCommonAttributes(props: Props) {
                 onChange(e);
                 handleFormOnChange?.();
               }}
-              className="focus:border-blue-400 !h-24 text-13"
+              className="focus:border-blue-400 w-full"
               hasError={Boolean(errors?.event_date)}
               tabIndex={getIndex("event_date")}
             />
           )}
         />
       </div>
-      <div className="md:col-span-4">
-        <label>Бюджет (₽)</label>
+      <div className="md:col-span-3">
+        <label className="text-sm font-medium text-custom-text-200">Бюджет (₽)</label>
         <Controller
           name="budget_total"
           control={control}
           render={({ field: { value, onChange } }) => (
-            <input
+            <Input
               id="budget_total"
               name="budget_total"
               type="number"
@@ -188,9 +188,10 @@ function ProjectCommonAttributes(props: Props) {
                 onChange(e);
                 handleFormOnChange?.();
               }}
-              className="focus:border-blue-400 !h-24 text-13"
+              className="focus:border-blue-400 w-full"
               hasError={Boolean(errors?.budget_total)}
               tabIndex={getIndex("budget_total")}
+              placeholder="0"
             />
           )}
         />

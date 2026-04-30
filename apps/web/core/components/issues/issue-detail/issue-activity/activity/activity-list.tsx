@@ -32,6 +32,8 @@ import {
   IssueAttachmentActivity,
   IssueArchivedAtActivity,
   IssueInboxActivity,
+  IssueBudgetEstimatedActivity,
+  IssueBudgetActualActivity,
 } from "./actions";
 
 type TIssueActivityItem = {
@@ -77,6 +79,10 @@ export const IssueActivityItem = observer(function IssueActivityItem(props: TIss
       return <IssueStartDateActivity {...componentDefaultProps} showIssue={false} />;
     case "target_date":
       return <IssueTargetDateActivity {...componentDefaultProps} showIssue={false} />;
+    case "budget_estimated":
+      return <IssueBudgetEstimatedActivity {...componentDefaultProps} showIssue={false} />;
+    case "budget_actual":
+      return <IssueBudgetActualActivity {...componentDefaultProps} showIssue={false} />;
     case "cycles":
       return <IssueCycleActivity {...componentDefaultProps} />;
     case "modules":

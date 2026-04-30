@@ -26,6 +26,9 @@ export type TWorkspaceDraftIssue = {
   target_date: string | undefined;
   completed_at: string | undefined;
 
+  budget_estimated?: number | string | null;
+  budget_actual?: number | string | null;
+
   created_at: string;
   updated_at: string;
   created_by: string;

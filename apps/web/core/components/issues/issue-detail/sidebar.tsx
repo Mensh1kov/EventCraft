@@ -47,6 +47,7 @@ import { IssueCycleSelect } from "./cycle-select";
 import { IssueLabel } from "./label";
 import { IssueModuleSelect } from "./module-select";
 import type { TIssueOperations } from "./root";
+import { DollarSignIcon } from "lucide-react";
 
 type Props = {
   workspaceSlug: string;
@@ -188,7 +189,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
               </div>
             </SidebarPropertyListItem>
 
-            <SidebarPropertyListItem icon={EstimatePropertyIcon} label={t("issue.budget_estimated")}>
+            <SidebarPropertyListItem icon={DollarSignIcon} label={t("common.budget_estimated")}>
               <input
                 type="number"
                 value={issue.budget_estimated ?? ""}
@@ -203,7 +204,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
               />
             </SidebarPropertyListItem>
 
-            <SidebarPropertyListItem icon={EstimatePropertyIcon} label={t("issue.budget_actual")}>
+            <SidebarPropertyListItem icon={DollarSignIcon} label={t("common.budget_actual")}>
               <input
                 type="number"
                 value={issue.budget_actual ?? ""}
