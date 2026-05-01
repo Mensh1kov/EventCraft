@@ -152,6 +152,8 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
 
       logo_props: formData.logo_props,
       timezone: formData.timezone,
+      event_date: formData.event_date,
+      budget_total: formData.budget_total,
     };
 
     // Handle cover image changes
@@ -425,6 +427,47 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
               )}
             />
             {errors.timezone && <span className="text-11 text-danger-primary">{errors.timezone.message}</span>}
+          </div>
+          <div className="flex flex-col gap-1">
+            <h4 className="text-13">Дата мероприятия</h4>
+            <Controller
+              name="event_date"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <Input
+                  id="event_date"
+                  name="event_date"
+                  type="date"
+                  value={value || ""}
+                  onChange={(e) => {
+                    onChange(e);
+                  }}
+                  className="w-full font-medium"
+                  disabled={!isAdmin}
+                />
+              )}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <h4 className="text-13">Бюджет (₽)</h4>
+            <Controller
+              name="budget_total"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <Input
+                  id="budget_total"
+                  name="budget_total"
+                  type="number"
+                  value={value || ""}
+                  onChange={(e) => {
+                    onChange(e);
+                  }}
+                  className="w-full font-medium"
+                  disabled={!isAdmin}
+                  placeholder="0"
+                />
+              )}
+            />
           </div>
         </div>
         <div className="flex items-center justify-between py-2">

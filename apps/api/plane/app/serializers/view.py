@@ -32,6 +32,8 @@ class ViewIssueListSerializer(serializers.Serializer):
             "priority": instance.priority,
             "start_date": instance.start_date,
             "target_date": instance.target_date,
+            "budget_estimated": instance.budget_estimated,
+            "budget_actual": instance.budget_actual,
             "sequence_id": instance.sequence_id,
             "project_id": instance.project_id,
             "parent_id": instance.parent_id,

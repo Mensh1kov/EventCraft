@@ -77,6 +77,9 @@ export type TBaseIssue = {
   is_draft: boolean;
   is_epic?: boolean;
   is_intake?: boolean;
+
+  budget_estimated?: number | string | null;
+  budget_actual?: number | string | null;
 };
 
 type IssueRelation = {
@@ -145,6 +148,8 @@ export type TBulkIssueProperties = Pick<
   | "assignee_ids"
   | "start_date"
   | "target_date"
+  | "budget_actual"
+  | "budget_estimated"
   | "module_ids"
   | "cycle_id"
   | "estimate_point"
@@ -174,6 +179,8 @@ export interface IPublicIssue extends Pick<
   | "sort_order"
   | "start_date"
   | "target_date"
+  | "budget_actual"
+  | "budget_estimated"
   | "cycle_id"
   | "module_ids"
   | "label_ids"

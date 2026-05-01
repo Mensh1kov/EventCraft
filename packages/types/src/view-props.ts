@@ -139,6 +139,8 @@ export interface IIssueFilterOptions {
   project?: string[] | null;
   team_project?: string[] | null;
   start_date?: string[] | null;
+  budget_estimated?: string[] | null;
+  budget_actual?: string[] | null;
   state?: string[] | null;
   state_group?: string[] | null;
   subscriber?: string[] | null;

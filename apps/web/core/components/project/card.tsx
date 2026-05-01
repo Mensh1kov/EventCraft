@@ -17,7 +17,7 @@ import { Logo } from "@plane/propel/emoji-icon-picker";
 import { LinkIcon, LockIcon, NewTabIcon, TrashIcon, CheckIcon } from "@plane/propel/icons";
 import { setPromiseToast, setToast, TOAST_TYPE } from "@plane/propel/toast";
 import { Tooltip } from "@plane/propel/tooltip";
-import type { IProject } from "@plane/types";
+import { EIssuesStoreType, type IProject } from "@plane/types";
 import type { TContextMenuItem } from "@plane/ui";
 import { Avatar, AvatarGroup, ContextMenu, FavoriteStar } from "@plane/ui";
 import { copyUrlToClipboard, cn, getFileURL, renderFormattedDate } from "@plane/utils";
@@ -25,6 +25,7 @@ import { copyUrlToClipboard, cn, getFileURL, renderFormattedDate } from "@plane/
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useProject } from "@/hooks/store/use-project";
+import { useIssues } from "@/hooks/store/use-issues";
 import { useUserPermissions } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
 import { usePlatformOS } from "@/hooks/use-platform-os";
@@ -37,6 +38,38 @@ import { ArchiveRestoreProjectModal } from "./archive-restore-modal";
 type Props = {
   project: IProject;
 };
+
+const BudgetBar = observer(({ project, budgetTotal }: { project: IProject; budgetTotal: number }) => {
+  const { issueMap } = useIssues(EIssuesStoreType.PROJECT);
+  
+  const issues = Object.values(issueMap || {}).filter(
+    (issue) => issue.project_id === project.id
+  );
+
+  const estimated = issues.reduce((sum, issue) => sum + (Number(issue.budget_estimated) || 0), 0);
+  const actual = issues.reduce((sum, issue) => sum + (Number(issue.budget_actual) || 0), 0);
+  const progress = budgetTotal > 0 ? (actual / budgetTotal) * 100 : 0;
+  const isOverBudget = actual > budgetTotal;
+
+  const barLength = 20;
+  const filledLength = Math.floor((Math.min(progress, 100) / 100) * barLength);
+  const progressBar = "█".repeat(filledLength) + "░".repeat(barLength - filledLength);
+
+  return (
+    <div className="flex flex-col gap-1 text-xs">
+      <div className="flex items-center gap-3">
+        <span>План: {estimated.toLocaleString()} ₽</span>
+        <span>Факт: {actual.toLocaleString()} ₽</span>
+      </div>
+      <div className="font-mono">
+        [{progressBar}] {Math.round(progress)}%
+      </div>
+      {isOverBudget && (
+        <div className="text-red-500">⚠️ Превышение бюджета!</div>
+      )}
+    </div>
+  );
+});
 
 export const ProjectCard = observer(function ProjectCard(props: Props) {
   const { project } = props;
@@ -267,15 +300,37 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
         </div>
 
         <div
-          className={cn("flex h-[104px] w-full flex-col justify-between rounded-b-sm p-4", {
+          className={cn("flex min-h-[104px] w-full flex-col justify-between rounded-b-sm p-4", {
             "opacity-90": isArchived,
           })}
         >
-          <p className="line-clamp-2 text-13 break-words text-tertiary">
-            {project.description && project.description.trim() !== ""
-              ? project.description
-              : `Created on ${renderFormattedDate(project.created_at)}`}
-          </p>
+          <div className="space-y-1.5">
+            <p className="line-clamp-2 text-13 break-words text-tertiary">
+              {project.description && project.description.trim() !== ""
+                ? project.description
+                : `Created on ${renderFormattedDate(project.created_at)}`}
+            </p>
+            {(project.event_date || project.budget_total) && (
+              <div className="flex flex-wrap items-center gap-3 text-11 text-secondary">
+                {project.event_date && (
+                  <span className="flex items-center gap-1">
+                    <span>📅</span>
+                    <span>{renderFormattedDate(project.event_date)}</span>
+                  </span>
+                )}
+                {project.budget_total && (
+                  <span className="flex items-center gap-1">
+                    <span>💰</span>
+                    <span>{Number(project.budget_total).toLocaleString("ru-RU")} ₽</span>
+                  </span>
+                )}
+              </div>
+            )}
+            {/* Budget bar - shown when project has a budget */}
+            {project.budget_total && Number(project.budget_total) > 0 && (
+              <BudgetBar project={project} budgetTotal={Number(project.budget_total)} />
+            )}
+          </div>
           <div className="item-center flex justify-between">
             <div className="flex items-center justify-center gap-2">
               <Tooltip

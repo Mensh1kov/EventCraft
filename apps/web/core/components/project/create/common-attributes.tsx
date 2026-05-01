@@ -151,6 +151,51 @@ function ProjectCommonAttributes(props: Props) {
           )}
         />
       </div>
+      <div className="md:col-span-3">
+        <label className="text-sm font-medium text-custom-text-200">Дата мероприятия</label>
+        <Controller
+          name="event_date"
+          control={control}
+          render={({ field: { value, onChange } }) => (
+            <Input
+              id="event_date"
+              name="event_date"
+              type="date"
+              value={value || ""}
+              onChange={(e) => {
+                onChange(e);
+                handleFormOnChange?.();
+              }}
+              className="focus:border-blue-400 w-full"
+              hasError={Boolean(errors?.event_date)}
+              tabIndex={getIndex("event_date")}
+            />
+          )}
+        />
+      </div>
+      <div className="md:col-span-3">
+        <label className="text-sm font-medium text-custom-text-200">Бюджет (₽)</label>
+        <Controller
+          name="budget_total"
+          control={control}
+          render={({ field: { value, onChange } }) => (
+            <Input
+              id="budget_total"
+              name="budget_total"
+              type="number"
+              value={value || ""}
+              onChange={(e) => {
+                onChange(e);
+                handleFormOnChange?.();
+              }}
+              className="focus:border-blue-400 w-full"
+              hasError={Boolean(errors?.budget_total)}
+              tabIndex={getIndex("budget_total")}
+              placeholder="0"
+            />
+          )}
+        />
+      </div>
     </div>
   );
 }

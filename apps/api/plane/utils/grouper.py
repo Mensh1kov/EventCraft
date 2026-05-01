@@ -113,6 +113,8 @@ def issue_on_results(
         "priority",
         "start_date",
         "target_date",
+        "budget_estimated",
+        "budget_actual",
         "sequence_id",
         "project_id",
         "parent_id",

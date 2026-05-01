@@ -47,6 +47,7 @@ import { IssueCycleSelect } from "./cycle-select";
 import { IssueLabel } from "./label";
 import { IssueModuleSelect } from "./module-select";
 import type { TIssueOperations } from "./root";
+import { DollarSignIcon } from "lucide-react";
 
 type Props = {
   workspaceSlug: string;
@@ -186,6 +187,36 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
                 />
                 {issue.target_date && <DateAlert date={issue.target_date} workItem={issue} projectId={projectId} />}
               </div>
+            </SidebarPropertyListItem>
+
+            <SidebarPropertyListItem icon={DollarSignIcon} label={t("common.budget_estimated")}>
+              <input
+                type="number"
+                value={issue.budget_estimated ?? ""}
+                onChange={(e) =>
+                  issueOperations.update(workspaceSlug, projectId, issueId, {
+                    budget_estimated: e.target.value ? parseFloat(e.target.value) : null,
+                  })
+                }
+                disabled={!isEditable}
+                placeholder="0"
+                className="h-7.5 w-full rounded-sm border border-subtle-1 bg-transparent px-2 py-0.5 text-body-xs-regular focus:border-primary focus:outline-none"
+              />
+            </SidebarPropertyListItem>
+
+            <SidebarPropertyListItem icon={DollarSignIcon} label={t("common.budget_actual")}>
+              <input
+                type="number"
+                value={issue.budget_actual ?? ""}
+                onChange={(e) =>
+                  issueOperations.update(workspaceSlug, projectId, issueId, {
+                    budget_actual: e.target.value ? parseFloat(e.target.value) : null,
+                  })
+                }
+                disabled={!isEditable}
+                placeholder="0"
+                className="h-7.5 w-full rounded-sm border border-subtle-1 bg-transparent px-2 py-0.5 text-body-xs-regular focus:border-primary focus:outline-none"
+              />
             </SidebarPropertyListItem>
 
             {projectId && areEstimateEnabledByProjectId(projectId) && (

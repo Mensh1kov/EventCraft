@@ -45,6 +45,7 @@ import type { TIssueOperations } from "../issue-detail";
 import { IssueCycleSelect } from "../issue-detail/cycle-select";
 import { IssueLabel } from "../issue-detail/label";
 import { IssueModuleSelect } from "../issue-detail/module-select";
+import { DollarSign, DollarSignIcon } from "lucide-react";
 
 interface IPeekOverviewProperties {
   workspaceSlug: string;
@@ -188,6 +189,35 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
             {issue.target_date && <DateAlert date={issue.target_date} workItem={issue} projectId={projectId} />}
           </div>
         </SidebarPropertyListItem>
+
+        <SidebarPropertyListItem icon={DollarSignIcon} label={t("Budget Estimated")}>
+          <input
+            type="number"
+            step="any"
+            value={issue?.budget_estimated ?? ""}
+            onChange={(e) => {
+              const value = e.target.value !== "" ? Number(e.target.value) : null;
+              issueOperations.update(workspaceSlug, projectId, issueId, { budget_estimated: value });
+            }}
+            disabled={disabled}
+            className="h-7.5 w-full grow rounded-sm border border-custom-border-200 bg-transparent px-2 text-body-xs-medium text-custom-text-100 placeholder:text-placeholder focus:outline-none focus:ring-1 focus:ring-custom-primary disabled:cursor-not-allowed disabled:opacity-60"
+          />
+        </SidebarPropertyListItem>  
+
+        <SidebarPropertyListItem icon={DollarSignIcon} label={t("Budget Actual")}>
+          <input
+            type="number"
+            step="any"
+            value={issue?.budget_actual ?? ""}
+            onChange={(e) => {
+              const value = e.target.value !== "" ? Number(e.target.value) : null;
+              issueOperations.update(workspaceSlug, projectId, issueId, { budget_actual: value });
+            }}
+            disabled={disabled}
+            className="h-7.5 w-full grow rounded-sm border border-custom-border-200 bg-transparent px-2 text-body-xs-medium text-custom-text-100 placeholder:text-placeholder focus:outline-none focus:ring-1 focus:ring-custom-primary disabled:cursor-not-allowed disabled:opacity-60"
+          />
+        </SidebarPropertyListItem>
+
 
         {isEstimateEnabled && (
           <SidebarPropertyListItem icon={EstimatePropertyIcon} label={t("common.estimate")}>

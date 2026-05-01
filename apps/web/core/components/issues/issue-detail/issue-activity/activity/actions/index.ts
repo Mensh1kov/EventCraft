@@ -15,6 +15,8 @@ export * from "./parent";
 export * from "./relation";
 export * from "./start_date";
 export * from "./target_date";
+export * from "./budget_estimated";
+export * from "./budget_actual";
 export * from "./cycle";
 export * from "./module";
 export * from "./label";
