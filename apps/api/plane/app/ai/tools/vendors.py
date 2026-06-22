@@ -32,7 +32,13 @@ def _vendor_dict(v: Vendor) -> dict:
 
 @register_tool(
     name="list_vendors",
-    description="Search vendors (contractors) in the workspace directory. Use when the user asks to find a photographer, caterer, host, etc.",
+    description=(
+        "Найти / показать / получить список ПОДРЯДЧИКОВ (vendors / contractors) из справочника. "
+        "Используй ИМЕННО этот инструмент на запросы вида «найди подрядчика», «найди фотографа/кейтеринг/ведущего», "
+        "«покажи/дай список подрядчиков», «какие есть подрядчики». "
+        "Это НЕ шаблоны и НЕ проекты — НИКОГДА не вызывай для этого list_templates или list_projects. "
+        "Фильтры опциональны: category (photography/video/catering/sound_lighting/decor/mc/transport/other), max_price, min_rating, name_contains."
+    ),
     input_schema={
         "type": "object",
         "properties": {

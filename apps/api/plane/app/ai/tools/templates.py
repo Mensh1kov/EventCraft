@@ -37,7 +37,9 @@ def _emoji_to_logo_props(emoji):
 @register_tool(
     name="list_templates",
     description=(
-        "List event templates in the current workspace. "
+        "Список ШАБЛОНОВ мероприятий. Используй ТОЛЬКО когда пользователь явно говорит про «шаблон/template» "
+        "или просит «создать мероприятие из шаблона». "
+        "НЕ вызывай для поиска подрядчиков (для этого list_vendors) и не для списка проектов (list_projects). "
         "ALWAYS call this BEFORE create_event_from_template — never guess a template_id. "
         "GUIDELINES for `query`: "
         "(1) Pass a SHORT KEYWORD only (1–2 words), the topic the user mentioned. "
