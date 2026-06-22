@@ -97,10 +97,10 @@ export const IssueVendorSelect = observer(function IssueVendorSelect(props: Prop
             key={link.id}
             className="flex items-center gap-1 rounded-md border border-subtle bg-layer-1 px-2 py-0.5 text-12"
           >
-            <Tooltip tooltipContent="Открыть в справочнике подрядчиков">
+            <Tooltip tooltipContent="Открыть карточку подрядчика">
               <button
                 type="button"
-                onClick={() => router.push(`/${workspaceSlug}/vendors/#${vendor.id}`)}
+                onClick={() => router.push(`/${workspaceSlug}/vendors?vendor=${vendor.id}`)}
                 className="font-medium text-primary hover:underline"
               >
                 {vendor.name}

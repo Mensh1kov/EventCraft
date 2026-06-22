@@ -4,9 +4,10 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
+import { useSearchParams } from "react-router";
 import { Plus, Search, Store } from "lucide-react";
 import useSWR from "swr";
 import { Button } from "@plane/propel/button";
@@ -38,6 +39,17 @@ export const VendorRoot = observer(function VendorRoot() {
     workspaceSlug ? () => fetchVendors(workspaceSlug.toString()) : null,
     { revalidateOnFocus: false }
   );
+
+  // Open a specific vendor's card when navigated with ?vendor=<id> (e.g. clicking a vendor chip on a task)
+  const [searchParams] = useSearchParams();
+  const focusVendorId = searchParams.get("vendor");
+  const focusVendor = focusVendorId ? vendorMap[focusVendorId] : undefined;
+  useEffect(() => {
+    if (focusVendor) {
+      setEditingVendor(focusVendor);
+      setIsFormOpen(true);
+    }
+  }, [focusVendorId, focusVendor]);
 
   const filteredVendors = useMemo(() => {
     return vendorIds
