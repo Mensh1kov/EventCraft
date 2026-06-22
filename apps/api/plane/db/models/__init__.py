@@ -91,4 +91,13 @@ from .sticky import Sticky
 
 from .description import Description, DescriptionVersion
 
-from .project_template import ProjectTemplate, TemplateState, TemplateLabel, TemplateTask
+from .project_template import (
+    ProjectTemplate,
+    TemplateState,
+    TemplateLabel,
+    TemplateTask,
+    TemplateTaskVendor,
+    TemplateTaskLink,
+)
+
+from .vendor import Vendor, IssueVendor, ProjectVendor

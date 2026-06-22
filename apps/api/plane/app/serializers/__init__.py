@@ -141,3 +141,9 @@ from .project_template import (
     TemplateLabelSerializer,
     TemplateTaskSerializer,
 )
+
+from .vendor import (
+    VendorSerializer,
+    IssueVendorSerializer,
+    ProjectVendorSerializer,
+)

@@ -45,6 +45,8 @@ import type { ILabelStore } from "./label.store";
 import { LabelStore } from "./label.store";
 import type { IProjectTemplateStore } from "./project-template/project-template.store";
 import { ProjectTemplateStore } from "./project-template/project-template.store";
+import type { IVendorStore } from "./vendor/vendor.store";
+import { VendorStore } from "./vendor/vendor.store";
 import type { IMemberRootStore } from "./member";
 import { MemberRootStore } from "./member";
 import type { IModuleStore } from "./module.store";
@@ -89,6 +91,7 @@ export class CoreRootStore {
   state: IStateStore;
   label: ILabelStore;
   projectTemplate: IProjectTemplateStore;
+  vendor: IVendorStore;
   dashboard: IDashboardStore;
   analytics: IAnalyticsStore;
   projectPages: IProjectPageStore;
@@ -127,6 +130,7 @@ export class CoreRootStore {
     this.state = new StateStore(this as unknown as RootStore);
     this.label = new LabelStore(this);
     this.projectTemplate = new ProjectTemplateStore(this);
+    this.vendor = new VendorStore();
     this.dashboard = new DashboardStore(this);
     this.multipleSelect = new MultipleSelectStore();
     this.projectInbox = new ProjectInboxStore(this);
@@ -163,6 +167,7 @@ export class CoreRootStore {
     this.state = new StateStore(this as unknown as RootStore);
     this.label = new LabelStore(this);
     this.projectTemplate = new ProjectTemplateStore(this);
+    this.vendor = new VendorStore();
     this.dashboard = new DashboardStore(this);
     this.projectInbox = new ProjectInboxStore(this);
     this.projectPages = new ProjectPageStore(this as unknown as RootStore);

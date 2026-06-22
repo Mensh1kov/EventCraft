@@ -2,7 +2,7 @@ from django.utils import timezone
 from plane.app.ai.tools.registry import register_tool
 from plane.app.serializers import IssueCreateSerializer
 from plane.bgtasks.issue_activities_task import issue_activity
-from plane.db.models import Issue, Project, State
+from plane.db.models import Issue, Label, Project, State
 
 
 @register_tool(
@@ -79,6 +79,15 @@ def list_issues(workspace_slug: str, user, project_id: str, name_contains: str =
                 "type": "string",
                 "description": "Due date in YYYY-MM-DD format. Always include if the user mentioned a date or deadline.",
             },
+            "budget_estimated": {
+                "type": "number",
+                "description": "Estimated budget for the task (e.g. the vendor's price). Include when the user mentions a cost.",
+            },
+            "label_names": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Labels to attach by name (created automatically if they don't exist). E.g. ['Подрядчик'].",
+            },
         },
         "required": ["project_id", "title"],
     },
@@ -91,6 +100,8 @@ def create_issue(
     description: str = "",
     priority: str = "none",
     due_date: str | None = None,
+    budget_estimated=None,
+    label_names: list | None = None,
     **kwargs,
 ) -> dict:
     project = Project.objects.get(id=project_id, workspace__slug=workspace_slug)
@@ -102,6 +113,20 @@ def create_issue(
     }
     if due_date:
         data["target_date"] = due_date
+    if budget_estimated is not None:
+        data["budget_estimated"] = budget_estimated
+
+    # Resolve label names to ids, auto-creating labels that don't exist yet.
+    if label_names:
+        label_ids = []
+        for label_name in label_names:
+            label, _ = Label.objects.get_or_create(
+                workspace=project.workspace,
+                project=project,
+                name=label_name,
+            )
+            label_ids.append(str(label.id))
+        data["label_ids"] = label_ids
 
     serializer = IssueCreateSerializer(
         data=data,

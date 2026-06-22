@@ -105,3 +105,52 @@ class TemplateTask(BaseModel):
 
     def __str__(self):
         return f"{self.template.name} / {self.title}"
+
+
+class TemplateTaskVendor(BaseModel):
+    """Vendor link captured inside a template task.
+
+    Keeps a denormalized ``vendor_name`` so the template stays readable even if
+    the referenced vendor is later deleted; ``vendor`` is used to recreate the
+    real IssueVendor relation when the template is applied.
+    """
+
+    template_task = models.ForeignKey(
+        TemplateTask,
+        on_delete=models.CASCADE,
+        related_name="vendors",
+    )
+    vendor = models.ForeignKey(
+        "db.Vendor",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="template_task_vendors",
+    )
+    vendor_name = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = "template_task_vendors"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.template_task.title} / {self.vendor_name}"
+
+
+class TemplateTaskLink(BaseModel):
+    """A URL link captured inside a template task (e.g. a vendor card link)."""
+
+    template_task = models.ForeignKey(
+        TemplateTask,
+        on_delete=models.CASCADE,
+        related_name="links",
+    )
+    title = models.CharField(max_length=255, null=True, blank=True)
+    url = models.TextField()
+
+    class Meta:
+        db_table = "template_task_links"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.template_task.title} / {self.url}"

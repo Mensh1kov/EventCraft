@@ -11,6 +11,8 @@ from plane.app.serializers import (
 )
 from plane.db.models import (
     Issue,
+    IssueLink,
+    IssueVendor,
     Label,
     Project,
     ProjectMember,
@@ -19,6 +21,8 @@ from plane.db.models import (
     TemplateLabel,
     TemplateState,
     TemplateTask,
+    TemplateTaskLink,
+    TemplateTaskVendor,
     Workspace,
 )
 from plane.db.models.state import DEFAULT_STATES, StateGroup
@@ -229,6 +233,35 @@ class ProjectTemplateViewSet(BaseViewSet):
         if issue_labels:
             IssueLabel.objects.bulk_create(issue_labels, batch_size=50)
 
+        # Восстанавливаем привязки подрядчиков и ссылки из шаблона
+        issue_vendors = []
+        issue_links = []
+        for issue, task in zip(issues, tasks):
+            for tt_vendor in task.vendors.all():
+                if tt_vendor.vendor_id:
+                    issue_vendors.append(
+                        IssueVendor(
+                            issue=issue,
+                            vendor_id=tt_vendor.vendor_id,
+                            project=project,
+                            workspace=workspace,
+                        )
+                    )
+            for tt_link in task.links.all():
+                issue_links.append(
+                    IssueLink(
+                        issue=issue,
+                        url=tt_link.url,
+                        title=tt_link.title,
+                        project=project,
+                        workspace=workspace,
+                    )
+                )
+        if issue_vendors:
+            IssueVendor.objects.bulk_create(issue_vendors, batch_size=50)
+        if issue_links:
+            IssueLink.objects.bulk_create(issue_links, batch_size=50)
+
         # Инкрементируем счётчик
         ProjectTemplate.objects.filter(pk=pk).update(usage_count=template.usage_count + 1)
 
@@ -307,12 +340,14 @@ class SaveProjectAsTemplateEndpoint(BaseViewSet):
         )
 
         # Копируем задачи (без личных данных)
-        issues = Issue.objects.filter(
-            project=project,
-            parent__isnull=True,
-        ).order_by("sort_order")
+        issues = list(
+            Issue.objects.filter(
+                project=project,
+                parent__isnull=True,
+            ).order_by("sort_order")
+        )
 
-        TemplateTask.objects.bulk_create(
+        created_tasks = TemplateTask.objects.bulk_create(
             [
                 TemplateTask(
                     template=template,
@@ -326,6 +361,31 @@ class SaveProjectAsTemplateEndpoint(BaseViewSet):
             ],
             batch_size=50,
         )
+
+        # Сохраняем привязки подрядчиков и ссылки задач внутри шаблона
+        template_task_vendors = []
+        template_task_links = []
+        for task, issue in zip(created_tasks, issues):
+            for issue_vendor in IssueVendor.objects.filter(issue=issue).select_related("vendor"):
+                template_task_vendors.append(
+                    TemplateTaskVendor(
+                        template_task=task,
+                        vendor=issue_vendor.vendor,
+                        vendor_name=issue_vendor.vendor.name if issue_vendor.vendor else None,
+                    )
+                )
+            for issue_link in IssueLink.objects.filter(issue=issue):
+                template_task_links.append(
+                    TemplateTaskLink(
+                        template_task=task,
+                        title=issue_link.title,
+                        url=issue_link.url,
+                    )
+                )
+        if template_task_vendors:
+            TemplateTaskVendor.objects.bulk_create(template_task_vendors, batch_size=50)
+        if template_task_links:
+            TemplateTaskLink.objects.bulk_create(template_task_links, batch_size=50)
 
         return Response(
             ProjectTemplateSerializer(template).data,

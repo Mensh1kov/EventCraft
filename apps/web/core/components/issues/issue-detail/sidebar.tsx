@@ -43,11 +43,12 @@ import { DateAlert } from "@/plane-web/components/issues/issue-details/sidebar/d
 import { TransferHopInfo } from "@/plane-web/components/issues/issue-details/sidebar/transfer-hop-info";
 import { IssueWorklogProperty } from "@/plane-web/components/issues/worklog/property";
 import { SidebarPropertyListItem } from "@/components/common/layout/sidebar/property-list-item";
+import { IssueVendorSelect } from "@/components/vendor/issue-vendor-select";
 import { IssueCycleSelect } from "./cycle-select";
 import { IssueLabel } from "./label";
 import { IssueModuleSelect } from "./module-select";
 import type { TIssueOperations } from "./root";
-import { DollarSignIcon } from "lucide-react";
+import { DollarSignIcon, Store } from "lucide-react";
 
 type Props = {
   workspaceSlug: string;
@@ -200,7 +201,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
                 }
                 disabled={!isEditable}
                 placeholder="0"
-                className="h-7.5 w-full rounded-sm border border-subtle-1 bg-transparent px-2 py-0.5 text-body-xs-regular focus:border-primary focus:outline-none"
+                className="focus:border-primary h-7.5 w-full rounded-sm border border-subtle-1 bg-transparent px-2 py-0.5 text-body-xs-regular focus:outline-none"
               />
             </SidebarPropertyListItem>
 
@@ -215,7 +216,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
                 }
                 disabled={!isEditable}
                 placeholder="0"
-                className="h-7.5 w-full rounded-sm border border-subtle-1 bg-transparent px-2 py-0.5 text-body-xs-regular focus:border-primary focus:outline-none"
+                className="focus:border-primary h-7.5 w-full rounded-sm border border-subtle-1 bg-transparent px-2 py-0.5 text-body-xs-regular focus:outline-none"
               />
             </SidebarPropertyListItem>
 
@@ -283,6 +284,15 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
 
             <SidebarPropertyListItem icon={LabelPropertyIcon} label={t("common.labels")}>
               <IssueLabel
+                workspaceSlug={workspaceSlug}
+                projectId={projectId}
+                issueId={issueId}
+                disabled={!isEditable}
+              />
+            </SidebarPropertyListItem>
+
+            <SidebarPropertyListItem icon={Store} label="Подрядчики">
+              <IssueVendorSelect
                 workspaceSlug={workspaceSlug}
                 projectId={projectId}
                 issueId={issueId}
