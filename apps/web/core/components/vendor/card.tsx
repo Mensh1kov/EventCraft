@@ -11,6 +11,7 @@ import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import { Tooltip } from "@plane/ui";
 import type { IVendor } from "@plane/types";
 import { copyTextToClipboard } from "@plane/utils";
+import { useAppRouter } from "@/hooks/use-app-router";
 import { formatVendorPrice, getVendorCategoryLabel } from "./constants";
 
 type Props = {
@@ -22,6 +23,7 @@ type Props = {
 export const VendorCard = observer(function VendorCard(props: Props) {
   const { vendor, onEdit, onDelete } = props;
   const { workspaceSlug } = useParams();
+  const router = useAppRouter();
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/${workspaceSlug}/vendors/#${vendor.id}`;
@@ -34,7 +36,13 @@ export const VendorCard = observer(function VendorCard(props: Props) {
     <div className="hover:shadow-sm flex flex-col gap-3 rounded-lg border border-subtle bg-surface-1 p-4 transition-shadow">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h4 className="text-15 truncate font-semibold">{vendor.name}</h4>
+          <button
+            type="button"
+            onClick={() => router.push(`/${workspaceSlug}/vendors/${vendor.id}`)}
+            className="text-15 block max-w-full truncate text-left font-semibold hover:text-primary hover:underline"
+          >
+            {vendor.name}
+          </button>
           <span className="text-12 text-secondary">{getVendorCategoryLabel(vendor.category)}</span>
         </div>
         {vendor.rating ? <span className="flex-shrink-0 text-12">{"⭐".repeat(vendor.rating)}</span> : null}

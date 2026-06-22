@@ -100,7 +100,7 @@ export const IssueVendorSelect = observer(function IssueVendorSelect(props: Prop
             <Tooltip tooltipContent="Открыть карточку подрядчика">
               <button
                 type="button"
-                onClick={() => router.push(`/${workspaceSlug}/vendors?vendor=${vendor.id}`)}
+                onClick={() => router.push(`/${workspaceSlug}/vendors/${vendor.id}`)}
                 className="font-medium text-primary hover:underline"
               >
                 {vendor.name}
