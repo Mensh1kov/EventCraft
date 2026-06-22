@@ -133,3 +133,11 @@ from .draft import (
     DraftIssueSerializer,
     DraftIssueDetailSerializer,
 )
+
+from .project_template import (
+    ProjectTemplateSerializer,
+    ProjectTemplateWriteSerializer,
+    TemplateStateSerializer,
+    TemplateLabelSerializer,
+    TemplateTaskSerializer,
+)

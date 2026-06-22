@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
 import { FormProvider, useForm } from "react-hook-form";
 // plane imports
@@ -18,6 +18,7 @@ import ProjectCreateButtons from "@/components/project/create/project-create-but
 // hooks
 import { getCoverImageType, uploadCoverImage } from "@/helpers/cover-image.helper";
 import { useProject } from "@/hooks/store/use-project";
+import { useProjectTemplate } from "@/hooks/store/use-project-template";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane web types
 import type { TProject } from "@/plane-web/types/projects";
@@ -35,10 +36,12 @@ export type TCreateProjectFormProps = {
 };
 
 export const CreateProjectForm = observer(function CreateProjectForm(props: TCreateProjectFormProps) {
-  const { setToFavorite, workspaceSlug, data, onClose, handleNextStep, updateCoverImageStatus } = props;
+  const { setToFavorite, workspaceSlug, data, onClose, handleNextStep, updateCoverImageStatus, templateId } = props;
   // store
   const { t } = useTranslation();
-  const { addProjectToFavorites, createProject, updateProject } = useProject();
+  const { addProjectToFavorites, createProject, updateProject, fetchProjectDetails } = useProject();
+  const { getTemplateById, applyTemplate } = useProjectTemplate();
+  const template = templateId ? getTemplateById(templateId) : undefined;
   // states
   const [shouldAutoSyncIdentifier, setShouldAutoSyncIdentifier] = useState(true);
   // form info
@@ -47,6 +50,19 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
     reValidateMode: "onChange",
   });
   const { handleSubmit, reset, setValue } = methods;
+
+  // Pre-fill budget from template task costs
+  useEffect(() => {
+    if (!template) return;
+    const defaultBudget = template.tasks.reduce(
+      (sum, task) => sum + (task.estimated_cost ? parseFloat(task.estimated_cost) : 0),
+      0
+    );
+    if (defaultBudget > 0) {
+      reset({ ...getProjectFormValues(), ...data, budget_total: defaultBudget });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [template?.id]);
   const { isMobile } = usePlatformOS();
   const handleAddToFavorites = (projectId: string) => {
     if (!workspaceSlug) return;
@@ -61,7 +77,30 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   };
 
   const onSubmit = async (formData: Partial<TProject>) => {
-    // Upper case identifier
+    // When creating from a template, use the apply endpoint
+    if (templateId) {
+      if (!formData.name?.trim()) return;
+      if (!formData.event_date) {
+        setToast({ type: TOAST_TYPE.ERROR, title: t("toast.error"), message: "Укажите дату мероприятия" });
+        return;
+      }
+      try {
+        const res = await applyTemplate(workspaceSlug.toString(), templateId, {
+          name: formData.name!,
+          event_date: formData.event_date,
+          budget_total: formData.budget_total ? String(formData.budget_total) : undefined,
+          logo_props: formData.logo_props ?? null,
+        });
+        await fetchProjectDetails(workspaceSlug.toString(), res.project_id).catch(() => {});
+        setToast({ type: TOAST_TYPE.SUCCESS, title: t("success"), message: t("project_created_successfully") });
+        handleNextStep(res.project_id);
+      } catch {
+        setToast({ type: TOAST_TYPE.ERROR, title: t("toast.error"), message: t("something_went_wrong") });
+      }
+      return;
+    }
+
+    // Standard project creation flow
     formData.identifier = formData.identifier?.toUpperCase();
     const coverImage = formData.cover_image_url;
     let uploadedAssetUrl: string | null = null;
@@ -111,10 +150,10 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
           handleAddToFavorites(res.id);
         }
         handleNextStep(res.id);
+        return res;
       })
       .catch((err) => {
         try {
-          // Handle the new error format where codes are nested in arrays under field names
           const errorData = err?.data ?? {};
 
           const nameError = errorData.name?.includes("PROJECT_NAME_ALREADY_EXIST");
@@ -144,7 +183,6 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
             });
           }
         } catch (error) {
-          // Fallback error handling if the error processing fails
           console.error("Error processing API error:", error);
           setToast({
             type: TOAST_TYPE.ERROR,

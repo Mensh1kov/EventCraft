@@ -30,6 +30,21 @@ export type TChatMessage = {
   content: string;
 };
 
+/**
+ * Provider-specific message block as returned by the backend.
+ * Treated as opaque on the client: stored, then echoed back on the next request
+ * so the LLM keeps access to prior tool_use / tool_result blocks and does not
+ * re-call list_* tools or hallucinate IDs.
+ */
+export type TChatRawMessage = {
+  role: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: any;
+  name?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function_call?: any;
+};
+
 export type TChatToolAction = {
   tool: string;
   result: string;
@@ -38,6 +53,7 @@ export type TChatToolAction = {
 export type TChatResponse = {
   response: string;
   actions: TChatToolAction[];
+  messages: TChatRawMessage[];
 };
 
 /**
@@ -74,7 +90,7 @@ export class AIService extends APIService {
    * @returns {Promise<{response: string}>} The processed text response
    * @throws {Error} Throws the response data if the request fails
    */
-  async chat(workspaceSlug: string, data: { messages: TChatMessage[] }): Promise<TChatResponse> {
+  async chat(workspaceSlug: string, data: { messages: TChatMessage[] | TChatRawMessage[] }): Promise<TChatResponse> {
     return this.post(`/api/workspaces/${workspaceSlug}/ai-chat/`, data)
       .then((response) => response?.data)
       .catch((error) => {

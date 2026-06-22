@@ -1,13 +1,10 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
 // services
 import { AIService } from "@plane/services";
-import type { TChatMessage, TChatToolAction } from "@plane/services";
+import type { TChatRawMessage, TChatToolAction } from "@plane/services";
 
-const generateId = (): string =>
-  "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-  });
+let messageCounter = 0;
+const generateId = (): string => `msg-${Date.now()}-${++messageCounter}`;
 
 const aiService = new AIService();
 
@@ -34,6 +31,10 @@ export class AiChatStore implements IAiChatStore {
   isOpen: boolean = false;
   isLoading: boolean = false;
   messages: TAiChatMessage[] = [];
+  // Provider-specific raw history kept opaque to the UI. Echoed back on every
+  // request so the LLM still sees prior tool_use / tool_result blocks (and the
+  // UUIDs they carry) instead of starting fresh and hallucinating IDs.
+  rawHistory: TChatRawMessage[] = [];
 
   constructor() {
     makeObservable(this, {
@@ -57,18 +58,15 @@ export class AiChatStore implements IAiChatStore {
       content,
     };
 
+    const outgoingHistory: TChatRawMessage[] = [...this.rawHistory, { role: "user", content }];
+
     runInAction(() => {
       this.messages.push(userMessage);
       this.isLoading = true;
     });
 
     try {
-      const history: TChatMessage[] = this.messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      const result = await aiService.chat(workspaceSlug, { messages: history });
+      const result = await aiService.chat(workspaceSlug, { messages: outgoingHistory });
 
       runInAction(() => {
         this.messages.push({
@@ -77,6 +75,9 @@ export class AiChatStore implements IAiChatStore {
           content: result.response,
           actions: result.actions,
         });
+        // Trust the server's view of the conversation: it includes the assistant
+        // tool_use blocks we never want the model to lose.
+        this.rawHistory = result.messages ?? outgoingHistory;
       });
     } catch {
       runInAction(() => {
@@ -85,6 +86,8 @@ export class AiChatStore implements IAiChatStore {
           role: "assistant",
           content: "Произошла ошибка. Попробуй ещё раз.",
         });
+        // Roll back the optimistic user turn so a retry doesn't double-post it.
+        this.rawHistory = outgoingHistory.slice(0, -1);
       });
     } finally {
       runInAction(() => {
@@ -95,5 +98,6 @@ export class AiChatStore implements IAiChatStore {
 
   clearMessages = () => {
     this.messages = [];
+    this.rawHistory = [];
   };
 }
