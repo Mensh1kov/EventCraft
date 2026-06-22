@@ -49,6 +49,7 @@ export * from "./stickies";
 export * from "./timezone";
 export * from "./users";
 export * from "./utils";
+export * from "./vendors";
 export * from "./view-props";
 export * from "./views";
 export * from "./waitlist";

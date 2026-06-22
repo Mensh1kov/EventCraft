@@ -110,6 +110,9 @@ export const coreRoutes: RouteConfigEntry[] = [
           route(":workspaceSlug/templates", "./(all)/[workspaceSlug]/(projects)/templates/page.tsx"),
         ]),
 
+        // Vendors (contractors directory)
+        route(":workspaceSlug/vendors", "./(all)/[workspaceSlug]/(projects)/vendors/page.tsx"),
+
         // Workspace Views
         layout("./(all)/[workspaceSlug]/(projects)/workspace-views/layout.tsx", [
           route(":workspaceSlug/workspace-views", "./(all)/[workspaceSlug]/(projects)/workspace-views/page.tsx"),
