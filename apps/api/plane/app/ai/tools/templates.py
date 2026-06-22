@@ -6,6 +6,8 @@ from plane.app.ai.tools.registry import register_tool
 from plane.db.models import (
     Issue,
     IssueLabel,
+    IssueLink,
+    IssueVendor,
     Label,
     Project,
     ProjectMember,
@@ -14,6 +16,8 @@ from plane.db.models import (
     TemplateLabel,
     TemplateState,
     TemplateTask,
+    TemplateTaskLink,
+    TemplateTaskVendor,
     Workspace,
 )
 
@@ -247,6 +251,24 @@ def create_event_from_template(
     if issue_labels:
         IssueLabel.objects.bulk_create(issue_labels, batch_size=50)
 
+    # Restore vendor links and URL links saved in the template
+    issue_vendors = []
+    issue_links = []
+    for issue, task in zip(issues, tasks):
+        for tt_vendor in task.vendors.all():
+            if tt_vendor.vendor_id:
+                issue_vendors.append(
+                    IssueVendor(issue=issue, vendor_id=tt_vendor.vendor_id, project=project, workspace=workspace)
+                )
+        for tt_link in task.links.all():
+            issue_links.append(
+                IssueLink(issue=issue, url=tt_link.url, title=tt_link.title, project=project, workspace=workspace)
+            )
+    if issue_vendors:
+        IssueVendor.objects.bulk_create(issue_vendors, batch_size=50)
+    if issue_links:
+        IssueLink.objects.bulk_create(issue_links, batch_size=50)
+
     ProjectTemplate.objects.filter(pk=template_id).update(usage_count=template.usage_count + 1)
 
     return {
@@ -333,10 +355,10 @@ def save_project_as_template(
         batch_size=50,
     )
 
-    issues = Issue.objects.filter(
-        project=project, parent__isnull=True
-    ).order_by("sort_order")
-    TemplateTask.objects.bulk_create(
+    issues = list(
+        Issue.objects.filter(project=project, parent__isnull=True).order_by("sort_order")
+    )
+    created_tasks = TemplateTask.objects.bulk_create(
         [
             TemplateTask(
                 template=template,
@@ -350,6 +372,25 @@ def save_project_as_template(
         ],
         batch_size=50,
     )
+
+    # Capture vendor links and URL links for each task
+    tt_vendors = []
+    tt_links = []
+    for task, issue in zip(created_tasks, issues):
+        for iv in IssueVendor.objects.filter(issue=issue).select_related("vendor"):
+            tt_vendors.append(
+                TemplateTaskVendor(
+                    template_task=task,
+                    vendor=iv.vendor,
+                    vendor_name=iv.vendor.name if iv.vendor else None,
+                )
+            )
+        for il in IssueLink.objects.filter(issue=issue):
+            tt_links.append(TemplateTaskLink(template_task=task, title=il.title, url=il.url))
+    if tt_vendors:
+        TemplateTaskVendor.objects.bulk_create(tt_vendors, batch_size=50)
+    if tt_links:
+        TemplateTaskLink.objects.bulk_create(tt_links, batch_size=50)
 
     return {
         "template_id": str(template.id),
