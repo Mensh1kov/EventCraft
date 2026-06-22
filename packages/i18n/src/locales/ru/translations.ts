@@ -307,6 +307,7 @@ export default {
   stay_ahead_of_blockers: "Предупреждение блокирующих рабочих элементов",
   stay_ahead_of_blockers_description: "Выявление проблем между проектами и скрытых зависимостей между циклами.",
   analytics: "Аналитика",
+  templates: "Шаблоны",
   workspace_invites: "Приглашения в рабочее пространство",
   enter_god_mode: "Режим администратора",
   workspace_logo: "Логотип рабочего пространства",

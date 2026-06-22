@@ -72,102 +72,102 @@ export const AiChatPanel = observer(function AiChatPanel() {
     }
   };
 
+  // close on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") togglePanel(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen, togglePanel]);
+
   if (!isOpen) return null;
 
   return (
-    <>
-      <button
-        type="button"
-        className="fixed inset-0 z-20 cursor-default"
-        onClick={() => togglePanel(false)}
-        aria-label="Close AI Assistant"
-      />
-      <div className="shadow-xl fixed top-0 right-0 z-30 flex h-screen w-96 flex-col border-l border-subtle bg-surface-1">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-subtle px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-accent-primary" />
-            <span className="text-sm font-medium text-primary">AI Assistant</span>
-          </div>
-          <div className="flex items-center gap-1">
-            {messages.length > 0 && (
-              <button
-                onClick={clearMessages}
-                className="rounded p-1 text-secondary hover:bg-layer-transparent-hover hover:text-primary"
-                title="Очистить чат"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            )}
+    <div className="shadow-xl fixed top-0 right-0 z-30 flex h-screen w-96 flex-col border-l border-subtle bg-surface-1">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-subtle px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-accent-primary" />
+          <span className="text-sm font-medium text-primary">AI Assistant</span>
+        </div>
+        <div className="flex items-center gap-1">
+          {messages.length > 0 && (
             <button
-              onClick={() => togglePanel(false)}
+              onClick={clearMessages}
               className="rounded p-1 text-secondary hover:bg-layer-transparent-hover hover:text-primary"
+              title="Очистить чат"
             >
-              <X className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
             </button>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-3">
-          {messages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-              <Sparkles className="h-8 w-8 text-accent-primary opacity-50" />
-              <p className="text-sm text-secondary">Чем могу помочь?</p>
-              <div className="space-y-2">
-                {["Покажи все проекты", "Создай задачу «Найти кейтеринг»", "Какие задачи на этой неделе?"].map(
-                  (hint) => (
-                    <button
-                      key={hint}
-                      onClick={() => setInput(hint)}
-                      className="text-xs hover:border-accent-primary block w-full rounded-lg border border-subtle px-3 py-2 text-left text-secondary hover:text-primary"
-                    >
-                      {hint}
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
-              ))}
-              {isLoading && <TypingIndicator />}
-              <div ref={messagesEndRef} />
-            </div>
           )}
-        </div>
-
-        {/* Input */}
-        <div className="border-t border-subtle p-3">
-          <div className="focus-within:border-accent-primary flex items-end gap-2 rounded-xl border border-subtle bg-surface-2 px-3 py-2">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Напиши запрос... (Enter — отправить)"
-              rows={1}
-              className="text-sm max-h-32 flex-1 resize-none bg-transparent text-primary outline-none placeholder:text-secondary"
-              style={{ height: "auto" }}
-              onInput={(e) => {
-                const el = e.currentTarget;
-                el.style.height = "auto";
-                el.style.height = `${el.scrollHeight}px`;
-              }}
-            />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || isLoading}
-              className="rounded-lg p-1.5 text-accent-primary hover:bg-layer-transparent-hover disabled:opacity-40"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-          <p className="text-xs mt-1 text-center text-secondary">Shift+Enter — новая строка</p>
+          <button
+            onClick={() => togglePanel(false)}
+            className="rounded p-1 text-secondary hover:bg-layer-transparent-hover hover:text-primary"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       </div>
-    </>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {messages.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+            <Sparkles className="h-8 w-8 text-accent-primary opacity-50" />
+            <p className="text-sm text-secondary">Чем могу помочь?</p>
+            <div className="space-y-2">
+              {["Покажи все проекты", "Создай задачу «Найти кейтеринг»", "Какие задачи на этой неделе?"].map((hint) => (
+                <button
+                  key={hint}
+                  onClick={() => setInput(hint)}
+                  className="text-xs hover:border-accent-primary block w-full rounded-lg border border-subtle px-3 py-2 text-left text-secondary hover:text-primary"
+                >
+                  {hint}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {messages.map((message) => (
+              <MessageBubble key={message.id} message={message} />
+            ))}
+            {isLoading && <TypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+      </div>
+
+      {/* Input */}
+      <div className="border-t border-subtle p-3">
+        <div className="focus-within:border-accent-primary flex items-end gap-2 rounded-xl border border-subtle bg-surface-2 px-3 py-2">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Напиши запрос... (Enter — отправить)"
+            rows={1}
+            className="text-sm max-h-32 flex-1 resize-none bg-transparent text-primary outline-none placeholder:text-secondary"
+            style={{ height: "auto" }}
+            onInput={(e) => {
+              const el = e.currentTarget;
+              el.style.height = "auto";
+              el.style.height = `${el.scrollHeight}px`;
+            }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+            className="rounded-lg p-1.5 text-accent-primary hover:bg-layer-transparent-hover disabled:opacity-40"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="text-xs mt-1 text-center text-secondary">Shift+Enter — новая строка · Esc — закрыть</p>
+      </div>
+    </div>
   );
 });

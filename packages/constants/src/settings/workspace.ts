@@ -16,7 +16,6 @@ export enum WORKSPACE_SETTINGS_CATEGORY {
 
 export const WORKSPACE_SETTINGS_CATEGORIES: WORKSPACE_SETTINGS_CATEGORY[] = [
   WORKSPACE_SETTINGS_CATEGORY.ADMINISTRATION,
-  WORKSPACE_SETTINGS_CATEGORY.FEATURES,
   WORKSPACE_SETTINGS_CATEGORY.DEVELOPER,
 ];
 
@@ -55,6 +54,13 @@ export const WORKSPACE_SETTINGS: Record<TWorkspaceSettingsTabs, TWorkspaceSettin
     href: `/settings/webhooks`,
     access: [EUserWorkspaceRoles.ADMIN],
     highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/webhooks/`,
+  },
+  templates: {
+    key: "templates",
+    i18n_label: "workspace_settings.settings.templates.title",
+    href: `/settings/templates`,
+    access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
+    highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/templates/`,
   },
 };
 

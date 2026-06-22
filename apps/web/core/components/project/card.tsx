@@ -8,7 +8,7 @@ import React, { useRef, useState } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArchiveRestoreIcon, Settings, UserPlus } from "lucide-react";
+import { ArchiveRestoreIcon, LayoutTemplate, Settings, UserPlus } from "lucide-react";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
@@ -31,6 +31,7 @@ import { useAppRouter } from "@/hooks/use-app-router";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // local imports
 import { CoverImage } from "@/components/common/cover-image";
+import { SaveAsTemplateModal } from "@/components/project-template/save-as-template-modal";
 import { DeleteProjectModal } from "./delete-project-modal";
 import { JoinProjectModal } from "./join-project-modal";
 import { ArchiveRestoreProjectModal } from "./archive-restore-modal";
@@ -41,10 +42,8 @@ type Props = {
 
 const BudgetBar = observer(({ project, budgetTotal }: { project: IProject; budgetTotal: number }) => {
   const { issueMap } = useIssues(EIssuesStoreType.PROJECT);
-  
-  const issues = Object.values(issueMap || {}).filter(
-    (issue) => issue.project_id === project.id
-  );
+
+  const issues = Object.values(issueMap || {}).filter((issue) => issue.project_id === project.id);
 
   const estimated = issues.reduce((sum, issue) => sum + (Number(issue.budget_estimated) || 0), 0);
   const actual = issues.reduce((sum, issue) => sum + (Number(issue.budget_actual) || 0), 0);
@@ -56,7 +55,7 @@ const BudgetBar = observer(({ project, budgetTotal }: { project: IProject; budge
   const progressBar = "█".repeat(filledLength) + "░".repeat(barLength - filledLength);
 
   return (
-    <div className="flex flex-col gap-1 text-xs">
+    <div className="text-xs flex flex-col gap-1">
       <div className="flex items-center gap-3">
         <span>План: {estimated.toLocaleString()} ₽</span>
         <span>Факт: {actual.toLocaleString()} ₽</span>
@@ -64,9 +63,7 @@ const BudgetBar = observer(({ project, budgetTotal }: { project: IProject; budge
       <div className="font-mono">
         [{progressBar}] {Math.round(progress)}%
       </div>
-      {isOverBudget && (
-        <div className="text-red-500">⚠️ Превышение бюджета!</div>
-      )}
+      {isOverBudget && <div className="text-red-500">⚠️ Превышение бюджета!</div>}
     </div>
   );
 });
@@ -77,6 +74,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
   const [deleteProjectModalOpen, setDeleteProjectModal] = useState(false);
   const [joinProjectModalOpen, setJoinProjectModal] = useState(false);
   const [restoreProject, setRestoreProject] = useState(false);
+  const [saveAsTemplateOpen, setSaveAsTemplateOpen] = useState(false);
   // refs
   const projectCardRef = useRef(null);
   // router
@@ -185,6 +183,13 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
       shouldRender: !isArchived,
     },
     {
+      key: "save-as-template",
+      action: () => setSaveAsTemplateOpen(true),
+      title: "Сохранить как шаблон",
+      icon: LayoutTemplate,
+      shouldRender: !isArchived && (hasAdminRole || hasMemberRole),
+    },
+    {
       key: "restore",
       action: () => setRestoreProject(true),
       title: "Restore",
@@ -208,6 +213,16 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
         isOpen={deleteProjectModalOpen}
         onClose={() => setDeleteProjectModal(false)}
       />
+      {/* Save as template modal */}
+      {workspaceSlug && (
+        <SaveAsTemplateModal
+          workspaceSlug={workspaceSlug.toString()}
+          projectId={project.id}
+          projectName={project.name}
+          isOpen={saveAsTemplateOpen}
+          onClose={() => setSaveAsTemplateOpen(false)}
+        />
+      )}
       {/* Join Project Modal */}
       {workspaceSlug && (
         <JoinProjectModal
@@ -362,7 +377,8 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
             {isArchived ? (
               hasAdminRole && (
                 <div className="flex items-center justify-center gap-2">
-                  <div
+                  <button
+                    type="button"
                     className="flex items-center justify-center text-11 font-medium text-placeholder hover:text-secondary"
                     onClick={(e) => {
                       e.preventDefault();
@@ -374,8 +390,9 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
                       <ArchiveRestoreIcon className="h-3.5 w-3.5" />
                       Restore
                     </div>
-                  </div>
-                  <div
+                  </button>
+                  <button
+                    type="button"
                     className="flex items-center justify-center text-11 font-medium text-placeholder hover:text-secondary"
                     onClick={(e) => {
                       e.preventDefault();
@@ -384,22 +401,37 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
                     }}
                   >
                     <TrashIcon className="h-3.5 w-3.5" />
-                  </div>
+                  </button>
                 </div>
               )
             ) : (
               <>
                 {isMemberOfProject &&
                   (hasAdminRole || hasMemberRole ? (
-                    <Link
-                      className="flex items-center justify-center rounded-sm p-1 text-placeholder hover:bg-layer-1 hover:text-secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      href={`/${workspaceSlug}/settings/projects/${project.id}`}
-                    >
-                      <Settings className="h-3.5 w-3.5" />
-                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Tooltip isMobile={isMobile} tooltipContent="Сохранить как шаблон" position="top">
+                        <button
+                          type="button"
+                          className="flex items-center justify-center rounded-sm p-1 text-placeholder hover:bg-layer-1 hover:text-secondary"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSaveAsTemplateOpen(true);
+                          }}
+                        >
+                          <LayoutTemplate className="h-3.5 w-3.5" />
+                        </button>
+                      </Tooltip>
+                      <Link
+                        className="flex items-center justify-center rounded-sm p-1 text-placeholder hover:bg-layer-1 hover:text-secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        href={`/${workspaceSlug}/settings/projects/${project.id}`}
+                      >
+                        <Settings className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
                   ) : (
                     <span className="flex items-center gap-1 text-13 text-placeholder">
                       <CheckIcon className="h-3.5 w-3.5" />
