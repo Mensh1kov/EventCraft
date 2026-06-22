@@ -45,7 +45,8 @@ import type { TIssueOperations } from "../issue-detail";
 import { IssueCycleSelect } from "../issue-detail/cycle-select";
 import { IssueLabel } from "../issue-detail/label";
 import { IssueModuleSelect } from "../issue-detail/module-select";
-import { DollarSign, DollarSignIcon } from "lucide-react";
+import { DollarSignIcon, Store } from "lucide-react";
+import { IssueVendorSelect } from "@/components/vendor/issue-vendor-select";
 
 interface IPeekOverviewProperties {
   workspaceSlug: string;
@@ -200,9 +201,9 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
               issueOperations.update(workspaceSlug, projectId, issueId, { budget_estimated: value });
             }}
             disabled={disabled}
-            className="h-7.5 w-full grow rounded-sm border border-custom-border-200 bg-transparent px-2 text-body-xs-medium text-custom-text-100 placeholder:text-placeholder focus:outline-none focus:ring-1 focus:ring-custom-primary disabled:cursor-not-allowed disabled:opacity-60"
+            className="border-custom-border-200 text-custom-text-100 focus:ring-custom-primary h-7.5 w-full grow rounded-sm border bg-transparent px-2 text-body-xs-medium placeholder:text-placeholder focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
-        </SidebarPropertyListItem>  
+        </SidebarPropertyListItem>
 
         <SidebarPropertyListItem icon={DollarSignIcon} label={t("Budget Actual")}>
           <input
@@ -214,10 +215,9 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
               issueOperations.update(workspaceSlug, projectId, issueId, { budget_actual: value });
             }}
             disabled={disabled}
-            className="h-7.5 w-full grow rounded-sm border border-custom-border-200 bg-transparent px-2 text-body-xs-medium text-custom-text-100 placeholder:text-placeholder focus:outline-none focus:ring-1 focus:ring-custom-primary disabled:cursor-not-allowed disabled:opacity-60"
+            className="border-custom-border-200 text-custom-text-100 focus:ring-custom-primary h-7.5 w-full grow rounded-sm border bg-transparent px-2 text-body-xs-medium placeholder:text-placeholder focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
         </SidebarPropertyListItem>
-
 
         {isEstimateEnabled && (
           <SidebarPropertyListItem icon={EstimatePropertyIcon} label={t("common.estimate")}>
@@ -281,6 +281,15 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
 
         <SidebarPropertyListItem icon={LabelPropertyIcon} label={t("common.labels")}>
           <IssueLabel workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} disabled={disabled} />
+        </SidebarPropertyListItem>
+
+        <SidebarPropertyListItem icon={Store} label="Подрядчики">
+          <IssueVendorSelect
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            issueId={issueId}
+            disabled={disabled}
+          />
         </SidebarPropertyListItem>
 
         <IssueWorklogProperty

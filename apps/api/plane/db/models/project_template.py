@@ -135,3 +135,22 @@ class TemplateTaskVendor(BaseModel):
 
     def __str__(self):
         return f"{self.template_task.title} / {self.vendor_name}"
+
+
+class TemplateTaskLink(BaseModel):
+    """A URL link captured inside a template task (e.g. a vendor card link)."""
+
+    template_task = models.ForeignKey(
+        TemplateTask,
+        on_delete=models.CASCADE,
+        related_name="links",
+    )
+    title = models.CharField(max_length=255, null=True, blank=True)
+    url = models.TextField()
+
+    class Meta:
+        db_table = "template_task_links"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.template_task.title} / {self.url}"

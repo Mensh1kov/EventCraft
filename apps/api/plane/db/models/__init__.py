@@ -97,6 +97,7 @@ from .project_template import (
     TemplateLabel,
     TemplateTask,
     TemplateTaskVendor,
+    TemplateTaskLink,
 )
 
 from .vendor import Vendor, IssueVendor, ProjectVendor
