@@ -121,7 +121,19 @@ export const IssueVendorSelect = observer(function IssueVendorSelect(props: Prop
           <input
             value={draft}
             list={datalistId}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              // Picking an existing vendor from the datalist immediately links it
+              const picked = availableVendorIds.map((id) => vendorMap[id]).find((v) => v && v.name === val);
+              if (picked) {
+                setDraft("");
+                linkVendor(picked.id).catch(() =>
+                  setToast({ type: TOAST_TYPE.ERROR, title: "Ошибка", message: "Не удалось привязать подрядчика" })
+                );
+                return;
+              }
+              setDraft(val);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
