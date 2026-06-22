@@ -46,10 +46,12 @@ def list_projects(workspace_slug: str, user, **kwargs) -> dict:
 @register_tool(
     name="create_project",
     description=(
-        "Create a new project (event) from scratch — use this for requests like "
-        "'создай мероприятие день рождения' when no template is used. "
-        "Creates the project with default statuses and adds the user as admin. "
-        "After creating, you can add tasks with create_issue and attach vendors with link_vendor_to_issue."
+        "Создать новый ПРОЕКТ / МЕРОПРИЯТИЕ с нуля (например «создай мероприятие день рождения», "
+        "«заведи проект корпоратив»), когда не используется шаблон. "
+        "Создаёт проект с дефолтными статусами и добавляет пользователя админом. "
+        "ВАЖНО: это инструмент ТОЛЬКО для проектов/мероприятий. "
+        "Если пользователь просит завести ПОДРЯДЧИКА (фотограф, кейтеринг, ведущий и т.п.) — "
+        "это НЕ проект: используй create_vendor. Задача внутри проекта — create_issue."
     ),
     input_schema={
         "type": "object",
