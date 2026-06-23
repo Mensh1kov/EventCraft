@@ -263,6 +263,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
 
           <CoverImage
             src={project.cover_image_url}
+            showDefaultWhenEmpty
             alt={project.name}
             className="absolute top-0 left-0 h-full w-full rounded-t"
           />

@@ -26,6 +26,7 @@ def _vendor_dict(v: Vendor) -> dict:
         "price_min": str(v.price_min) if v.price_min is not None else None,
         "price_max": str(v.price_max) if v.price_max is not None else None,
         "rating": v.rating,
+        "notes": v.notes or "",
         "url": f"/vendors/{v.id}",
     }
 
