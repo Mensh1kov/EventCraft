@@ -112,6 +112,7 @@ export const coreRoutes: RouteConfigEntry[] = [
 
         // Vendors (contractors directory)
         route(":workspaceSlug/vendors", "./(all)/[workspaceSlug]/(projects)/vendors/page.tsx"),
+        route(":workspaceSlug/vendors/:vendorId", "./(all)/[workspaceSlug]/(projects)/vendors/[vendorId]/page.tsx"),
 
         // Workspace Views
         layout("./(all)/[workspaceSlug]/(projects)/workspace-views/layout.tsx", [
