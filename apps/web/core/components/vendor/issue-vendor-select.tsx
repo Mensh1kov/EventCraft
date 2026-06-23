@@ -44,7 +44,7 @@ export const IssueVendorSelect = observer(function IssueVendorSelect(props: Prop
   useSWR(
     workspaceSlug && projectId && issueId ? `ISSUE_VENDORS_${issueId}` : null,
     () => fetchIssueVendors(workspaceSlug, projectId, issueId),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, revalidateIfStale: true }
   );
 
   const links = getIssueVendors(issueId);

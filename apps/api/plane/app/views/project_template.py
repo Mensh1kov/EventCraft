@@ -57,7 +57,7 @@ class ProjectTemplateViewSet(BaseViewSet):
             super()
             .get_queryset()
             .filter(workspace__slug=self.kwargs.get("slug"))
-            .prefetch_related("states", "labels", "tasks")
+            .prefetch_related("states", "labels", "tasks", "tasks__vendors", "tasks__vendors__vendor", "tasks__links")
             .order_by("-created_at")
         )
 

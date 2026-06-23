@@ -86,9 +86,9 @@ def list_templates(
 
     templates = []
     for t in qs.order_by("-usage_count", "name"):
-        task_count = t.tasks.count()
+        task_list = list(t.tasks.order_by("sequence"))
         total_cost = sum(
-            float(task.estimated_cost) for task in t.tasks.all() if task.estimated_cost
+            float(task.estimated_cost) for task in task_list if task.estimated_cost
         )
         templates.append({
             "id": str(t.id),
@@ -96,7 +96,14 @@ def list_templates(
             "description": t.description or "",
             "category": t.category,
             "emoji": t.emoji or "",
-            "task_count": task_count,
+            "task_count": len(task_list),
+            "tasks": [
+                {
+                    "title": task.title,
+                    "estimated_cost": float(task.estimated_cost) if task.estimated_cost else None,
+                }
+                for task in task_list
+            ],
             "estimated_budget": total_cost if total_cost > 0 else None,
             "usage_count": t.usage_count,
         })
@@ -152,7 +159,9 @@ def create_event_from_template(
 
     workspace = Workspace.objects.get(slug=workspace_slug)
     try:
-        template = ProjectTemplate.objects.prefetch_related("states", "labels", "tasks").get(
+        template = ProjectTemplate.objects.prefetch_related(
+            "states", "labels", "tasks", "tasks__vendors", "tasks__vendors__vendor", "tasks__links"
+        ).get(
             pk=template_id, workspace=workspace
         )
     except (ProjectTemplate.DoesNotExist, ValueError, ValidationError, DataError):
@@ -256,12 +265,17 @@ def create_event_from_template(
     # Restore vendor links and URL links saved in the template
     issue_vendors = []
     issue_links = []
-    for issue, task in zip(issues, tasks):
+    # Pre-fetch vendor links per task to build the summary
+    task_vendor_names: dict[int, list[str]] = {}
+    for idx, (issue, task) in enumerate(zip(issues, tasks)):
+        names = []
         for tt_vendor in task.vendors.all():
             if tt_vendor.vendor_id:
                 issue_vendors.append(
                     IssueVendor(issue=issue, vendor_id=tt_vendor.vendor_id, project=project, workspace=workspace)
                 )
+                names.append(tt_vendor.vendor.name if tt_vendor.vendor else (tt_vendor.vendor_name or ""))
+        task_vendor_names[idx] = names
         for tt_link in task.links.all():
             issue_links.append(
                 IssueLink(issue=issue, url=tt_link.url, title=tt_link.title, project=project, workspace=workspace)
@@ -273,11 +287,23 @@ def create_event_from_template(
 
     ProjectTemplate.objects.filter(pk=template_id).update(usage_count=template.usage_count + 1)
 
+    # Full task list with issue IDs and vendor status — lets the AI report the summary
+    task_summaries = [
+        {
+            "id": str(issue.id),
+            "title": task.title,
+            "vendors": task_vendor_names.get(idx, []),
+        }
+        for idx, (issue, task) in enumerate(zip(issues, tasks))
+    ]
+
     return {
         "project_id": str(project.id),
         "project_name": project.name,
         "identifier": project.identifier,
+        "tasks": task_summaries,
         "tasks_created": len(issues),
+        "vendor_links_restored": sum(1 for names in task_vendor_names.values() if names),
         "message": f"Мероприятие '{name}' успешно создано из шаблона '{template.name}' ({len(issues)} задач)",
     }
 

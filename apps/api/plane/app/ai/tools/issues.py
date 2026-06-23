@@ -1,3 +1,5 @@
+import json
+
 from django.utils import timezone
 from plane.app.ai.tools.registry import register_tool
 from plane.app.serializers import IssueCreateSerializer
@@ -54,7 +56,7 @@ def list_issues(workspace_slug: str, user, project_id: str, name_contains: str =
 
 @register_tool(
     name="create_issue",
-    description="Create a new issue (task) in a project.",
+    description="Create a new issue (task) in a project. IMPORTANT: project_id MUST come from a list_projects, create_project, or create_event_from_template tool_result in this conversation — never invent it. If you do not have a project_id yet, call list_projects first.",
     input_schema={
         "type": "object",
         "properties": {
@@ -77,7 +79,7 @@ def list_issues(workspace_slug: str, user, project_id: str, name_contains: str =
             },
             "due_date": {
                 "type": "string",
-                "description": "Due date in YYYY-MM-DD format. Always include if the user mentioned a date or deadline.",
+                "description": "Task deadline in YYYY-MM-DD format. Only set if the user explicitly gave a deadline for this specific task (not the project event date).",
             },
             "budget_estimated": {
                 "type": "number",
@@ -144,7 +146,7 @@ def create_issue(
 
     issue_activity.delay(
         type="issue.activity.created",
-        requested_data=str(data),
+        requested_data=json.dumps(data, ensure_ascii=False),
         actor_id=str(user.id),
         issue_id=str(issue.id),
         project_id=str(project_id),
@@ -163,7 +165,7 @@ def create_issue(
 
 @register_tool(
     name="update_issue",
-    description="Update fields of an existing issue.",
+    description="Update fields of an existing issue. Use budget_estimated for planned cost, budget_actual for real spent amount. Only pass due_date if the user explicitly specified a deadline for THIS task (not the project event date).",
     input_schema={
         "type": "object",
         "properties": {
@@ -182,7 +184,15 @@ def create_issue(
             },
             "due_date": {
                 "type": "string",
-                "description": "Due date in YYYY-MM-DD format",
+                "description": "Task deadline in YYYY-MM-DD format. Only set if the user explicitly gave a deadline for this specific task.",
+            },
+            "budget_estimated": {
+                "type": "number",
+                "description": "Planned/estimated cost for this task. Use when user says 'добавь бюджет', 'плановая стоимость', 'estimated budget'.",
+            },
+            "budget_actual": {
+                "type": "number",
+                "description": "Actual/spent cost for this task. Use when user says 'фактическая стоимость', 'потратили', 'actual cost'.",
             },
         },
         "required": ["issue_id"],
@@ -196,6 +206,8 @@ def update_issue(
     description: str | None = None,
     priority: str | None = None,
     due_date: str | None = None,
+    budget_estimated: float | None = None,
+    budget_actual: float | None = None,
     **kwargs,
 ) -> dict:
     issue = Issue.objects.get(id=issue_id, workspace__slug=workspace_slug)
@@ -208,6 +220,10 @@ def update_issue(
         issue.priority = priority
     if due_date:
         issue.target_date = due_date
+    if budget_estimated is not None:
+        issue.budget_estimated = budget_estimated
+    if budget_actual is not None:
+        issue.budget_actual = budget_actual
 
     issue.updated_by = user
     issue.save()

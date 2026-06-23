@@ -46,12 +46,13 @@ def list_projects(workspace_slug: str, user, **kwargs) -> dict:
 @register_tool(
     name="create_project",
     description=(
-        "Создать новый ПРОЕКТ / МЕРОПРИЯТИЕ с нуля (например «создай мероприятие день рождения», "
-        "«заведи проект корпоратив»), когда не используется шаблон. "
-        "Создаёт проект с дефолтными статусами и добавляет пользователя админом. "
-        "ВАЖНО: это инструмент ТОЛЬКО для проектов/мероприятий. "
-        "Если пользователь просит завести ПОДРЯДЧИКА (фотограф, кейтеринг, ведущий и т.п.) — "
-        "это НЕ проект: используй create_vendor. Задача внутри проекта — create_issue."
+        "Создать новый ПРОЕКТ / МЕРОПРИЯТИЕ с нуля, когда шаблон НЕ используется. "
+        "⚠️ ЗАПРЕЩЕНО вызывать этот инструмент если пользователь согласился использовать шаблон — "
+        "в этом случае вызывай create_event_from_template, который уже создаёт проект внутри себя. "
+        "Вызов create_project перед create_event_from_template создаёт дубликат и ломает сценарий. "
+        "Используй ТОЛЬКО когда: шаблон не найден, пользователь явно отказался от шаблона, "
+        "или пользователь сказал «без шаблона» / «с нуля» / «пустой проект». "
+        "Если пользователь просит завести ПОДРЯДЧИКА — используй create_vendor, не этот инструмент."
     ),
     input_schema={
         "type": "object",
@@ -59,7 +60,8 @@ def list_projects(workspace_slug: str, user, **kwargs) -> dict:
             "name": {"type": "string", "description": "Event / project name, e.g. 'День рождения Анны'"},
             "description": {"type": "string", "description": "Optional short description"},
             "event_date": {"type": "string", "description": "Event date in YYYY-MM-DD format (ask the user if not given)"},
-            "budget_total": {"type": "number", "description": "Total budget in rubles (optional)"},
+            "budget_total": {"type": "number", "description": "Total budget in rubles. If the user mentioned any number next to 'бюджет' or 'budget', pass it here. Do not skip."},
+            "emoji": {"type": "string", "description": "Single emoji for the project icon. Pick by type: 🎉 корпоратив, 🎄 новогодний, 🎂 день рождения, 🎤 конференция, 🏃 тимбилдинг, 📋 митап, 💍 свадьба, 🎓 выпускной."},
         },
         "required": ["name"],
     },
@@ -72,6 +74,7 @@ def create_project(
     description: str = "",
     event_date: str | None = None,
     budget_total: float | None = None,
+    emoji: str | None = None,
     **kwargs,
 ) -> dict:
     workspace = Workspace.objects.get(slug=workspace_slug)
@@ -83,6 +86,11 @@ def create_project(
         identifier = f"{base[:10]}{suffix}"
         suffix += 1
 
+    logo_props = {}
+    if emoji:
+        decimal_value = "-".join(str(ord(c)) for c in emoji)
+        logo_props = {"in_use": "emoji", "emoji": {"value": decimal_value}}
+
     project = Project.objects.create(
         workspace=workspace,
         name=name,
@@ -90,6 +98,8 @@ def create_project(
         description=description or "",
         event_date=event_date,
         budget_total=budget_total,
+        emoji=emoji,
+        logo_props=logo_props,
         network=0,
     )
 

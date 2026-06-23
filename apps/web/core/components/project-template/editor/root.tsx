@@ -116,7 +116,7 @@ export const TemplateEditorModal = observer(function TemplateEditorModal({
             {/* Hero with cover image */}
             <div className="relative h-44 w-full">
               <CoverImage
-                src={data.cover_image_url}
+                src={data.cover_image_url ?? undefined}
                 alt={data.name || "Шаблон"}
                 className="absolute top-0 left-0 h-full w-full"
                 showDefaultWhenEmpty

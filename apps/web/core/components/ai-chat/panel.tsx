@@ -1,10 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
-import { Sparkles, X, Send, Trash2 } from "lucide-react";
+import { Sparkles, X, Send, Trash2, GripVertical } from "lucide-react";
+import MarkdownIt from "markdown-it";
 import { cn } from "@plane/utils";
+
+const md = new MarkdownIt({ breaks: true, linkify: false });
 import { useAiChat } from "@/hooks/store/use-ai-chat";
 import type { TAiChatMessage } from "@/store/ai-chat.store";
+
+const MIN_WIDTH = 320;
+const MAX_WIDTH = 860;
+const DEFAULT_WIDTH = 384;
 
 const MessageBubble = ({ message }: { message: TAiChatMessage }) => {
   const isUser = message.role === "user";
@@ -16,7 +23,15 @@ const MessageBubble = ({ message }: { message: TAiChatMessage }) => {
           isUser ? "bg-accent-primary text-white" : "bg-surface-2 text-primary"
         )}
       >
-        <p className="break-words whitespace-pre-wrap">{message.content}</p>
+        {isUser ? (
+          <p className="break-words whitespace-pre-wrap">{message.content}</p>
+        ) : (
+          <div
+            className="prose-sm prose-p:my-1 prose-p:leading-relaxed prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-1 prose-ul:my-1 prose-ul:pl-4 prose-ol:my-1 prose-ol:pl-4 prose-li:my-0.5 prose-strong:font-semibold prose-code:rounded prose-code:bg-black/10 prose-code:px-1 prose-code:py-0.5 prose-code:text-xs prose-code:font-mono prose-pre:rounded-lg prose-pre:bg-black/10 prose-pre:p-3 prose-pre:text-xs prose-pre:overflow-x-auto prose-hr:my-2 prose-hr:border-white/20 max-w-none break-words text-inherit prose"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: md.render(message.content) }}
+          />
+        )}
         {message.actions && message.actions.length > 0 && (
           <div className="mt-2 space-y-1 border-t border-white/20 pt-2">
             {message.actions.map((action) => (
@@ -32,13 +47,15 @@ const MessageBubble = ({ message }: { message: TAiChatMessage }) => {
 };
 
 const TypingIndicator = () => (
-  <div className="flex justify-start">
-    <div className="rounded-xl bg-surface-2 px-4 py-3">
-      <div className="flex gap-1">
-        <span className="bg-secondary h-2 w-2 animate-bounce rounded-full [animation-delay:0ms]" />
-        <span className="bg-secondary h-2 w-2 animate-bounce rounded-full [animation-delay:150ms]" />
-        <span className="bg-secondary h-2 w-2 animate-bounce rounded-full [animation-delay:300ms]" />
-      </div>
+  <div className="flex items-center justify-start gap-2.5 py-1">
+    <div className="flex items-center justify-center rounded-full bg-accent-primary/10 p-1.5">
+      <Sparkles className="h-3.5 w-3.5 animate-pulse text-accent-primary" />
+    </div>
+    <div className="flex items-center gap-1.5 rounded-2xl bg-surface-2 px-4 py-2.5">
+      <span className="h-2 w-2 animate-bounce rounded-full bg-accent-primary [animation-delay:0ms]" />
+      <span className="h-2 w-2 animate-bounce rounded-full bg-accent-primary [animation-delay:150ms]" />
+      <span className="h-2 w-2 animate-bounce rounded-full bg-accent-primary [animation-delay:300ms]" />
+      <span className="text-xs ml-1.5 text-secondary">думаю...</span>
     </div>
   </div>
 );
@@ -47,6 +64,10 @@ export const AiChatPanel = observer(function AiChatPanel() {
   const { workspaceSlug } = useParams();
   const { isOpen, isLoading, messages, togglePanel, sendMessage, clearMessages } = useAiChat();
   const [input, setInput] = useState("");
+  const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const startWidth = useRef(DEFAULT_WIDTH);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -72,7 +93,6 @@ export const AiChatPanel = observer(function AiChatPanel() {
     }
   };
 
-  // close on Escape
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -82,10 +102,56 @@ export const AiChatPanel = observer(function AiChatPanel() {
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, togglePanel]);
 
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      isDragging.current = true;
+      startX.current = e.clientX;
+      startWidth.current = width;
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    },
+    [width]
+  );
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const delta = startX.current - e.clientX;
+      const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth.current + delta));
+      setWidth(next);
+    };
+    const onMouseUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, []);
+
   if (!isOpen) return null;
 
   return (
-    <div className="shadow-xl fixed top-0 right-0 z-30 flex h-screen w-96 flex-col border-l border-subtle bg-surface-1">
+    <div
+      className="shadow-xl fixed top-0 right-0 z-30 flex h-screen flex-col border-l border-subtle bg-surface-1"
+      style={{ width }}
+    >
+      {/* Resize handle */}
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        onMouseDown={onMouseDown}
+        className="cursor-col-resize-group absolute top-0 left-0 flex h-full w-1 items-center justify-center transition-colors hover:bg-accent-primary/20"
+        title="Потяни, чтобы изменить размер"
+      >
+        <GripVertical className="h-4 w-4 text-secondary opacity-0 transition-opacity group-hover:opacity-100" />
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between border-b border-subtle px-4 py-3">
         <div className="flex items-center gap-2">

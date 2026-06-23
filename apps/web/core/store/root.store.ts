@@ -143,7 +143,7 @@ export class CoreRootStore {
     this.analytics = new AnalyticsStore();
     this.workItemFilters = new WorkItemFilterStore();
     this.powerK = new PowerKStore();
-    this.aiChat = new AiChatStore();
+    this.aiChat = new AiChatStore(this);
   }
 
   resetOnSignOut() {
